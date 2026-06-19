@@ -336,27 +336,33 @@
   }
 
   function renderOverviewLeaders() {
-    const leaders = [
+    const metrics = [
       ["Pontos", "ptsAvg"],
       ["Rebotes", "rebAvg"],
-      ["Assistencias", "astAvg"],
-      ["Eficiencia", "effAvg"]
+      ["Assist.", "astAvg"],
+      ["Efic.", "effAvg"]
     ];
-    el("#overview-leaders").innerHTML = leaders
-      .map(([label, metric]) => {
-        const player = data.players
-          .filter((item) => item.games >= 2)
-          .slice()
-          .sort((a, b) => b[metric] - a[metric] || b.games - a.games)[0];
-        return `
-          <article class="leader-card">
-            <span>${label}</span>
-            <strong>${player ? player[metric].toFixed(1) : "0.0"}</strong>
-            <small>${player ? `${player.name} - ${player.abbr} / Cat. ${player.category}` : "Sem dados"}</small>
-          </article>
-        `;
-      })
+    el("#overview-leaders").innerHTML = ["A", "B"]
+      .map((category) => `
+        <article class="leader-card overview-category-leaders">
+          <span>Categoria ${category}</span>
+          ${metrics.map(([label, metric]) => {
+            const player = data.players
+              .filter((item) => item.games >= 2 && item.category === category)
+              .slice()
+              .sort((a, b) => b[metric] - a[metric] || b.games - a.games)[0];
+            return `
+              <button type="button" class="mini-leader" data-player-key="${safe(player?.playerKey || "")}" data-player-category="${category}">
+                <b>${label}</b>
+                <strong>${player ? player[metric].toFixed(1) : "0.0"}</strong>
+                <small>${player ? `${safe(player.name)} - ${safe(player.abbr)}` : "Sem dados"}</small>
+              </button>
+            `;
+          }).join("")}
+        </article>
+      `)
       .join("");
+    bindDetailClicks();
   }
 
   function renderLeaderTable(target, metric) {
@@ -731,14 +737,14 @@
   function drawCharts() {
     drawBarChart("#team-ppg-chart", data.teamStats.filter((row) => row.games && row.category === "A").sort((a, b) => b.ppg - a.ppg), "ppg");
     drawBarChart(
+      "#team-defense-overview-chart",
+      data.teamStats.filter((row) => row.games && row.category === "A").sort((a, b) => a.papg - b.papg),
+      "papg"
+    );
+    drawBarChart(
       "#team-diff-chart",
       data.teamStats.filter((row) => row.games && row.category === activeStatsCategory).sort((a, b) => b.diffAvg - a.diffAvg),
       "diffAvg"
-    );
-    drawBarChart(
-      "#team-defense-chart",
-      data.teamStats.filter((row) => row.games && row.category === activeStatsCategory).sort((a, b) => a.papg - b.papg),
-      "papg"
     );
   }
 

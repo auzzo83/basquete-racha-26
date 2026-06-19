@@ -126,15 +126,24 @@
           </article>
           <article class="feature-panel chart-panel">
             <div class="panel-title">
-              <h3>Ataque por equipe</h3>
+              <h3>Ataque e defesa</h3>
               <span>pontos por jogo</span>
             </div>
-            <canvas id="team-ppg-chart" width="760" height="360"></canvas>
+            <div class="dual-chart">
+              <div>
+                <h4>Ataque</h4>
+                <canvas id="team-ppg-chart" width="760" height="300"></canvas>
+              </div>
+              <div>
+                <h4>Melhores defesas</h4>
+                <canvas id="team-defense-overview-chart" width="760" height="300"></canvas>
+              </div>
+            </div>
           </article>
           <article class="feature-panel">
             <div class="panel-title">
               <h3>Lideres individuais</h3>
-              <span>medias oficiais</span>
+              <span>medias por categoria</span>
             </div>
             <div class="leader-grid" id="overview-leaders"></div>
           </article>
@@ -299,13 +308,6 @@
               <span>diferenca por jogo</span>
             </div>
             <canvas id="team-diff-chart" width="960" height="360"></canvas>
-          </article>
-          <article class="feature-panel chart-panel wide">
-            <div class="panel-title">
-              <h3>Melhores defesas</h3>
-              <span>pontos sofridos por jogo</span>
-            </div>
-            <canvas id="team-defense-chart" width="960" height="360"></canvas>
           </article>
         </div>
       </section>

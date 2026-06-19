@@ -132,6 +132,12 @@ def title_name(value):
     return " ".join(words)
 
 
+def player_display_name(team, number, raw_name):
+    if team == "Indiana Hoosiers" and str(number) == "83":
+        return "Aurelio Rodrigues"
+    return title_name(raw_name)
+
+
 def date_iso(day, month):
     month_key = strip_accents(month.lower()).replace(".", "")
     return f"2026-{MONTHS[month_key]:02d}-{int(day):02d}"
@@ -280,12 +286,13 @@ def parse_players(text):
         elif len(ints) >= 2:
             stats.update({"eff": ints[-2], "pts": ints[-1]})
 
+        number = parts[0].replace("*", "")
         players.append(
             {
                 "team": current_team,
                 "abbr": TEAM_ABBR[current_team],
-                "number": parts[0].replace("*", ""),
-                "name": title_name(raw_name),
+                "number": number,
+                "name": player_display_name(current_team, number, raw_name),
                 "starter": parts[0].startswith("*"),
                 "min": parts[minute_index],
                 **stats,
