@@ -499,12 +499,43 @@ h1 {
   margin: 10px;
 }
 
-.player-games {
-  padding: 0 10px 12px;
+.player-history {
+  margin: 0 10px 12px;
+  padding: 12px;
 }
 
-.player-games .box-row {
+.player-history-head {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 10px;
+}
+
+.player-history-head h3 {
+  font-size: 17px;
+}
+
+.player-history .player-games {
+  padding: 0;
+}
+
+.player-game-head {
+  display: none;
+}
+
+.player-game-rows .box-row {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-height: 0;
+  margin-bottom: 8px;
+  padding: 11px;
+  background: #f8fbff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.player-game-rows .box-row:last-child {
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--line);
 }
 
 .modal-panel > section > h3 {

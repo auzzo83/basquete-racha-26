@@ -2390,3 +2390,97 @@ tbody tr:hover td {
     border-left: 0;
   }
 }
+
+/* Player game log */
+.player-history {
+  margin: 0 18px 18px;
+  padding: 18px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.player-history-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.player-history-head h3,
+.player-history-head span {
+  margin: 0;
+}
+
+.player-history-head h3 {
+  color: var(--navy);
+  font-size: 20px;
+}
+
+.player-history-head span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.player-history .player-games {
+  padding: 0;
+}
+
+.player-game-head,
+.player-game-rows .box-row {
+  grid-template-columns: minmax(300px, 1fr) repeat(6, 54px);
+  gap: 8px;
+}
+
+.player-game-head {
+  margin: 0;
+  padding: 0 14px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.player-game-head b,
+.player-game-rows .box-row > b {
+  text-align: center;
+}
+
+.player-game-rows {
+  gap: 0;
+}
+
+.player-game-rows .box-row {
+  min-height: 66px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+
+.player-game-rows .box-row:last-child {
+  border-bottom: 0;
+}
+
+.player-game-rows .box-row:hover {
+  background: #f3f7fd;
+  transform: none;
+}
+
+.player-game-rows .box-row > span strong {
+  color: var(--navy);
+  font-size: 14px;
+}
+
+.player-game-rows .box-row > span small {
+  margin-top: 4px;
+  font-size: 10px;
+}
+
+.player-game-rows .box-row > b {
+  color: var(--navy);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}

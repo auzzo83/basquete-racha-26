@@ -679,10 +679,14 @@
         ${statPill("TO", player.blkAvg.toFixed(1))}
         ${statPill("EFF", player.effAvg.toFixed(1))}
       </div>
-      <section>
-        <h3>Jogo a jogo</h3>
-        <div class="box-head"><span></span><b>PTS</b><b>REB</b><b>AST</b><b>BR</b><b>TO</b><b>EFF</b></div>
-        <div class="box-table player-games">
+      <section class="player-history">
+        <div class="player-history-head">
+          <h3>Jogo a jogo</h3>
+          <span>Desempenho por partida</span>
+        </div>
+        <div class="player-games">
+          <div class="box-head player-game-head"><span>Partida</span><b>PTS</b><b>REB</b><b>AST</b><b>BR</b><b>TO</b><b>EFF</b></div>
+          <div class="box-table player-game-rows">
           ${games.map((game) => {
             const match = data.matches.find((item) => item.id === game.gameId);
             const opponent = match ? (match.home === game.team ? match.away : match.home) : "";
@@ -693,6 +697,7 @@
               </button>
             `;
           }).join("")}
+          </div>
         </div>
       </section>
     `);
