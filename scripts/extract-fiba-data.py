@@ -356,18 +356,32 @@ def category_from_box_date(date, official):
     return "B" if datetime.date(year, month, day).weekday() >= 5 else "A"
 
 
-def match_schedule(schedule, home, away, date, official, category):
+def date_distance(left, right):
+    left_date = datetime.date.fromisoformat(left)
+    right_date = datetime.date.fromisoformat(right)
+    return abs((left_date - right_date).days)
+
+
+def match_schedule(schedule, home, away, date, official, preferred_category):
     if not official:
         return None
     candidates = [
         game
         for game in schedule
-        if game["category"] == category
-        and {game["home"], game["away"]} == {home, away}
-        and "homeScore" not in game
+        if {game["home"], game["away"]} == {home, away} and "homeScore" not in game
     ]
     exact = [game for game in candidates if game["date"] == date]
-    return (exact or candidates[:1] or [None])[0]
+    if exact:
+        return exact[0]
+    if not candidates:
+        return None
+    candidates.sort(
+        key=lambda game: (
+            date_distance(game["date"], date),
+            0 if game["category"] == preferred_category else 1,
+        )
+    )
+    return candidates[0]
 
 
 def compute_standings(schedule):
@@ -422,7 +436,7 @@ def latest_name_map(raw_players):
     for player in raw_players:
         if not player["official"] or player["category"] == "TI":
             continue
-        name_key = (player["team"], player["number"])
+        name_key = (player["category"], player["team"], player["number"])
         if name_key not in latest_names or player["date"] >= latest_names[name_key]["date"]:
             latest_names[name_key] = {"date": player["date"], "name": player["name"]}
     return latest_names
@@ -466,7 +480,7 @@ def compute_players(raw_players):
 
     players = []
     for player in grouped.values():
-        player["name"] = latest_names[(player["team"], player["number"])]["name"]
+        player["name"] = latest_names[(player["category"], player["team"], player["number"])]["name"]
         for stat in ["pts", "oreb", "dreb", "reb", "ast", "stl", "blk", "turnovers", "eff"]:
             player[f"{stat}Avg"] = round(player[stat] / player["games"], 1) if player["games"] else 0
         players.append(player)
@@ -481,7 +495,9 @@ def normalize_player_games(raw_players):
             continue
         player = dict(player)
         player["playerKey"] = f'{player["team"]}::{player["number"]}'
-        player["name"] = latest_names.get((player["team"], player["number"]), {"name": player["name"]})["name"]
+        player["name"] = latest_names.get(
+            (player["category"], player["team"], player["number"]), {"name": player["name"]}
+        )["name"]
         rows.append(player)
     return rows
 
@@ -510,7 +526,7 @@ def write_placares_csv(schedule):
                     "Categoria": game.get("category", ""),
                     "Rodada": game.get("round", ""),
                     "Data Cronograma": game.get("date", ""),
-                    "Data Real": game.get("actualDate", ""),
+                    "Data Real": "",
                     "Horario": game.get("time", ""),
                     "Mandante": game.get("home", ""),
                     "Placar Mandante": game.get("homeScore", ""),
@@ -573,12 +589,12 @@ def main():
         home, home_score, away_score, away = score
         date = parse_date(text, file_path)
         official = "TORNEIO INICIO" not in norm(text)
-        category = category_from_box_date(date, official)
-        game = match_schedule(schedule, home, away, date, official, category)
+        preferred_category = category_from_box_date(date, official)
+        game = match_schedule(schedule, home, away, date, official, preferred_category)
+        category = game["category"] if game else preferred_category
         if game:
             game["status"] = "Final"
-            if game["date"] != date:
-                game["actualDate"] = date
+            game["date"] = date
             if game["home"] == home:
                 game["homeScore"] = home_score
                 game["awayScore"] = away_score

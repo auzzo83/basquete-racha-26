@@ -2,6 +2,13 @@
   const data = window.CHAMPIONSHIP_DATA;
   const teams = new Map(data.teams.map((team) => [team.name, team]));
   const money = new Intl.NumberFormat("pt-BR");
+  function localTodayIso() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
 
   const byDate = (a, b) => a.date.localeCompare(b.date) || (a.time || "").localeCompare(b.time || "");
   let officialMatches = [];
@@ -239,7 +246,8 @@
 
   function setMetrics() {
     const points = officialMatches.reduce((sum, game) => sum + game.homeScore + game.awayScore, 0);
-    const next = upcomingSchedule[0];
+    const todayIso = localTodayIso();
+    const next = upcomingSchedule.find((game) => game.date >= todayIso);
     el("#metric-games").textContent = completedSchedule.length;
     el("#metric-points").textContent = money.format(points);
     el("#metric-teams").textContent = data.standings.length;
@@ -253,7 +261,11 @@
       .map((row) => `
         <tr>
           <td>${row.rank}</td>
-          <td>${teamCell(row.team)}</td>
+          <td>
+            <button class="team-button" type="button" data-team-name="${safe(row.team)}" data-team-category="${safe(category)}">
+              ${teamCell(row.team)}
+            </button>
+          </td>
           <td>${row.played}</td>
           <td>${row.wins}</td>
           <td>${row.losses}</td>
@@ -264,6 +276,7 @@
       `)
       .join("");
     el(target).innerHTML = rows;
+    bindDetailClicks();
   }
 
   function renderLatestResults() {
@@ -284,7 +297,7 @@
 
   function topBy(metric, count, category = activeStatsCategory) {
     return data.players
-      .filter((player) => player.games > 0 && player.category === category)
+      .filter((player) => player.games >= 2 && player.category === category)
       .slice()
       .sort((a, b) => b[metric] - a[metric] || b.games - a.games)
       .slice(0, count);
@@ -305,7 +318,7 @@
 
   function renderMvpRace() {
     const top = data.players
-      .filter((player) => player.games >= 2)
+      .filter((player) => player.games >= 2 && player.category === activeStatsCategory)
       .map((player) => ({ ...player, mvp: mvpScore(player) }))
       .sort((a, b) => b.mvp - a.mvp || b.games - a.games)
       .slice(0, 3);
@@ -314,7 +327,7 @@
         <button class="mvp-card rank-${index + 1}" type="button" data-player-key="${safe(player.playerKey)}" data-player-category="${safe(player.category)}">
           <span class="mvp-rank">#${index + 1}</span>
           <span class="mvp-name">${safe(player.name)}</span>
-          <span class="mvp-team">${safe(player.abbr)} · Cat. ${safe(player.category)} · ${player.games} jogo${player.games === 1 ? "" : "s"}</span>
+          <span class="mvp-team">${safe(player.abbr)} · Cat. ${safe(player.category)} · ${player.games} jogos</span>
           <span class="mvp-score">${player.mvp.toFixed(1)}</span>
           <span class="mvp-line">${player.ptsAvg.toFixed(1)} PTS · ${player.rebAvg.toFixed(1)} REB · ${player.astAvg.toFixed(1)} AST · ${player.effAvg.toFixed(1)} EFF</span>
         </button>
@@ -332,7 +345,7 @@
     el("#overview-leaders").innerHTML = leaders
       .map(([label, metric]) => {
         const player = data.players
-          .filter((item) => item.games > 0)
+          .filter((item) => item.games >= 2)
           .slice()
           .sort((a, b) => b[metric] - a[metric] || b.games - a.games)[0];
         return `
@@ -382,6 +395,7 @@
     renderLeaderTable("#assists-leaders", "astAvg");
     renderLeaderTable("#steals-leaders", "stlAvg");
     renderLeaderTable("#blocks-leaders", "blkAvg");
+    renderMvpRace();
     bindDetailClicks();
     requestAnimationFrame(drawCharts);
   }
@@ -407,7 +421,7 @@
             ${final ? game.awayScore : "-"}
           </span>
         </div>
-        <p class="meta">${final ? "Final" : "Agendado"}${game.actualDate ? ` - remarcado para ${formatDate(game.actualDate)}` : ""}</p>
+        <p class="meta">${final ? "Final" : "Agendado"}</p>
       </button>
     `;
   }
@@ -536,6 +550,11 @@
       button.dataset.bound = "true";
       button.addEventListener("click", () => openPlayerDetail(button.dataset.playerKey, button.dataset.playerCategory));
     });
+    document.querySelectorAll("[data-team-name]").forEach((button) => {
+      if (button.dataset.bound === "true") return;
+      button.dataset.bound = "true";
+      button.addEventListener("click", () => openTeamDetail(button.dataset.teamName, button.dataset.teamCategory));
+    });
   }
 
   function openModal(html) {
@@ -562,6 +581,16 @@
     const players = data.playerGames
       .filter((player) => player.gameId === gameId)
       .sort((a, b) => b.pts - a.pts || b.reb - a.reb || b.ast - a.ast);
+    const rosterRows = (team) => players
+      .filter((player) => player.team === team)
+      .sort((a, b) => Number(a.number) - Number(b.number))
+      .map((player) => `
+        <button class="box-row full-stat" type="button" data-player-key="${safe(player.playerKey)}" data-player-category="${safe(player.category)}">
+          <span><strong>${safe(player.name)}</strong><small>#${safe(player.number)} · ${safe(player.min)} min</small></span>
+          <b>${player.pts}</b><b>${player.oreb}</b><b>${player.dreb}</b><b>${player.reb}</b><b>${player.ast}</b><b>${player.stl}</b><b>${player.blk}</b><b>${player.turnovers}</b><b>${player.eff}</b>
+        </button>
+      `)
+      .join("");
     const homeTotal = match.teamTotals.find((team) => team.team === match.home) || {};
     const awayTotal = match.teamTotals.find((team) => team.team === match.away) || {};
     const quarterLine = match.quarters.length
@@ -590,19 +619,17 @@
             ${statPill(`${awayTotal.abbr || "FORA"} EFF`, awayTotal.eff ?? "-")}
           </div>
         </section>
-        <section>
-          <h3>Destaques individuais</h3>
-          <div class="box-table">
-            ${players.slice(0, 10).map((player) => `
-              <button class="box-row" type="button" data-player-key="${safe(player.playerKey)}" data-player-category="${safe(player.category)}">
-                <span><strong>${safe(player.name)}</strong><small>${safe(player.abbr)} #${safe(player.number)}</small></span>
-                <b>${player.pts}</b><b>${player.reb}</b><b>${player.ast}</b><b>${player.stl}</b><b>${player.blk}</b><b>${player.eff}</b>
-              </button>
-            `).join("")}
-          </div>
-          <div class="box-head"><span></span><b>PTS</b><b>REB</b><b>AST</b><b>BR</b><b>TO</b><b>EFF</b></div>
-        </section>
       </div>
+      <section class="full-boxscore">
+        <h3>${safe(match.home)}</h3>
+        <div class="box-head full-stat"><span>Jogador</span><b>PTS</b><b>RO</b><b>RD</b><b>RT</b><b>AS</b><b>BR</b><b>TO</b><b>ER</b><b>EF</b></div>
+        <div class="box-table">${rosterRows(match.home)}</div>
+      </section>
+      <section class="full-boxscore">
+        <h3>${safe(match.away)}</h3>
+        <div class="box-head full-stat"><span>Jogador</span><b>PTS</b><b>RO</b><b>RD</b><b>RT</b><b>AS</b><b>BR</b><b>TO</b><b>ER</b><b>EF</b></div>
+        <div class="box-table">${rosterRows(match.away)}</div>
+      </section>
     `);
   }
 
@@ -628,6 +655,7 @@
       </div>
       <section>
         <h3>Jogo a jogo</h3>
+        <div class="box-head"><span></span><b>PTS</b><b>REB</b><b>AST</b><b>BR</b><b>TO</b><b>EFF</b></div>
         <div class="box-table player-games">
           ${games.map((game) => {
             const match = data.matches.find((item) => item.id === game.gameId);
@@ -640,8 +668,63 @@
             `;
           }).join("")}
         </div>
-        <div class="box-head"><span></span><b>PTS</b><b>REB</b><b>AST</b><b>BR</b><b>TO</b><b>EFF</b></div>
       </section>
+    `);
+  }
+
+  function openTeamDetail(teamName, category) {
+    const row = data.standings.find((item) => item.team === teamName && item.category === category);
+    const games = data.schedule
+      .filter((game) => game.category === category && [game.home, game.away].includes(teamName))
+      .sort((a, b) => b.date.localeCompare(a.date));
+    const leaders = data.players
+      .filter((player) => player.category === category && player.team === teamName && player.games >= 2)
+      .sort((a, b) => b.effAvg - a.effAvg)
+      .slice(0, 5);
+    openModal(`
+      <header class="detail-hero">
+        <span class="badge">Categoria ${safe(category)}</span>
+        <h2 id="modal-title">${safe(teamName)}</h2>
+        <p>${row ? `${row.wins}V · ${row.losses}D · saldo ${row.diff > 0 ? "+" : ""}${row.diff}` : "Resumo da equipe"}</p>
+      </header>
+      <div class="detail-stats player-summary">
+        ${statPill("Jogos", row?.played ?? 0)}
+        ${statPill("Pontos pro", row?.pf ?? 0)}
+        ${statPill("Pontos contra", row?.pa ?? 0)}
+        ${statPill("Saldo", row ? `${row.diff > 0 ? "+" : ""}${row.diff}` : 0)}
+        ${statPill("Vitorias", row?.wins ?? 0)}
+        ${statPill("Derrotas", row?.losses ?? 0)}
+      </div>
+      <div class="detail-grid">
+        <section>
+          <h3>Jogos da equipe</h3>
+          <div class="team-games">
+            ${games.map((game) => {
+              const final = Number.isFinite(game.homeScore);
+              const score = final ? `${game.homeScore} - ${game.awayScore}` : "Agendado";
+              const opponent = game.home === teamName ? game.away : game.home;
+              return `
+                <button class="team-game-row" type="button" data-game-id="${safe(game.id || "")}">
+                  <span><strong>${formatDate(game.actualDate || game.date)} vs ${safe(opponent)}</strong><small>${safe(game.home)} x ${safe(game.away)}</small></span>
+                  <b>${safe(score)}</b>
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </section>
+        <section>
+          <h3>Principais medias</h3>
+          <div class="box-head"><span></span><b>PTS</b><b>REB</b><b>AST</b><b>BR</b><b>TO</b><b>EFF</b></div>
+          <div class="box-table">
+            ${leaders.map((player) => `
+              <button class="box-row" type="button" data-player-key="${safe(player.playerKey)}" data-player-category="${safe(player.category)}">
+                <span><strong>${safe(player.name)}</strong><small>#${safe(player.number)} · ${player.games} jogos</small></span>
+                <b>${player.ptsAvg.toFixed(1)}</b><b>${player.rebAvg.toFixed(1)}</b><b>${player.astAvg.toFixed(1)}</b><b>${player.stlAvg.toFixed(1)}</b><b>${player.blkAvg.toFixed(1)}</b><b>${player.effAvg.toFixed(1)}</b>
+              </button>
+            `).join("")}
+          </div>
+        </section>
+      </div>
     `);
   }
 
@@ -651,6 +734,11 @@
       "#team-diff-chart",
       data.teamStats.filter((row) => row.games && row.category === activeStatsCategory).sort((a, b) => b.diffAvg - a.diffAvg),
       "diffAvg"
+    );
+    drawBarChart(
+      "#team-defense-chart",
+      data.teamStats.filter((row) => row.games && row.category === activeStatsCategory).sort((a, b) => a.papg - b.papg),
+      "papg"
     );
   }
 
@@ -665,11 +753,11 @@
     refreshDerivedData();
     setMetrics();
     renderStandings("#overview-standings-a", "A", 8);
+    renderStandings("#overview-standings-b", "B", 4);
     renderStandings("#standings-a", "A");
     renderStandings("#standings-b", "B");
     renderLatestResults();
     renderOverviewLeaders();
-    renderMvpRace();
     renderStatsCategory("A");
     renderGames();
     renderRules();
