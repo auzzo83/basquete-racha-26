@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Painel oficial de jogos, classificacao e estatisticas do Campeonato Interno de Basquete Racha 2026."
+    />
+    <meta name="robots" content="index,follow" />
+    <title>Racha Basquete 2026 | Estatisticas</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="topbar" aria-label="Navegacao principal">
+        <a class="brand" href="#overview" aria-label="Racha Basquete 2026">
+          <span class="brand-mark">RB</span>
+          <span>
+            <strong>Racha Basquete</strong>
+            <small>Clube Esperia 2026</small>
+          </span>
+        </a>
+        <div class="tabs" role="tablist" aria-label="Secoes do painel">
+          <button class="tab is-active" type="button" data-tab="overview">Visao geral</button>
+          <button class="tab" type="button" data-tab="games">Jogos</button>
+          <button class="tab" type="button" data-tab="standings">Classificacao</button>
+          <button class="tab" type="button" data-tab="stats">Estatisticas</button>
+          <button class="tab" type="button" data-tab="rules">Regulamento</button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" id="overview" data-panel="overview">
+        <div class="hero-copy">
+          <p class="season">Campeonato Interno de Basquete</p>
+          <h1>Racha 2026</h1>
+          <p class="hero-text">
+            Tabelas, jogos e liderancas estatisticas atualizadas a partir dos box scores FIBA
+            recebidos.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-action" href="#standings" data-jump="standings">Ver classificacao</a>
+            <a class="secondary-action" href="#games" data-jump="games">Calendario completo</a>
+          </div>
+        </div>
+        <div class="scoreboard" aria-label="Resumo do campeonato">
+          <div class="metric">
+            <span id="metric-games">0</span>
+            <small>jogos oficiais</small>
+          </div>
+          <div class="metric">
+            <span id="metric-points">0</span>
+            <small>pontos marcados</small>
+          </div>
+          <div class="metric">
+            <span id="metric-teams">12</span>
+            <small>equipes nas categorias</small>
+          </div>
+          <div class="metric">
+            <span id="metric-next">--</span>
+            <small>proximo jogo</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel active" data-panel="overview">
+        <div class="section-head">
+          <span>Resumo</span>
+          <h2>Panorama da fase de classificacao</h2>
+        </div>
+        <div class="overview-grid">
+          <article class="feature-panel">
+            <div class="panel-title">
+              <h3>Classificacao Categoria A</h3>
+              <span>Top 8 avancam</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Equipe</th>
+                    <th>V</th>
+                    <th>D</th>
+                    <th>Saldo</th>
+                  </tr>
+                </thead>
+                <tbody id="overview-standings-a"></tbody>
+              </table>
+            </div>
+          </article>
+          <article class="feature-panel">
+            <div class="panel-title">
+              <h3>Ultimos resultados</h3>
+              <span>Box scores oficiais</span>
+            </div>
+            <div class="result-list" id="latest-results"></div>
+          </article>
+          <article class="feature-panel chart-panel">
+            <div class="panel-title">
+              <h3>Ataque por equipe</h3>
+              <span>pontos por jogo</span>
+            </div>
+            <canvas id="team-ppg-chart" width="760" height="360"></canvas>
+          </article>
+          <article class="feature-panel">
+            <div class="panel-title">
+              <h3>Lideres individuais</h3>
+              <span>medias oficiais</span>
+            </div>
+            <div class="leader-grid" id="overview-leaders"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel" id="games" data-panel="games">
+        <div class="section-head">
+          <span>Jogos</span>
+          <h2>Resultados e calendario</h2>
+        </div>
+        <div class="toolbar">
+          <button class="filter is-active" type="button" data-game-filter="all">Todos</button>
+          <button class="filter" type="button" data-game-filter="A">Categoria A</button>
+          <button class="filter" type="button" data-game-filter="B">Categoria B</button>
+          <button class="filter" type="button" data-game-filter="TI">Torneio Inicio</button>
+          <button class="filter" type="button" data-game-filter="upcoming">Proximos</button>
+        </div>
+        <div class="games-grid" id="games-grid"></div>
+      </section>
+
+      <section class="panel" id="standings" data-panel="standings">
+        <div class="section-head">
+          <span>Classificacao</span>
+          <h2>Tabelas por categoria</h2>
+        </div>
+        <div class="standings-layout">
+          <article class="feature-panel">
+            <div class="panel-title">
+              <h3>Categoria A</h3>
+              <span>turno unico</span>
+            </div>
+            <div class="table-wrap">
+              <table class="full-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Equipe</th>
+                    <th>J</th>
+                    <th>V</th>
+                    <th>D</th>
+                    <th>PF</th>
+                    <th>PC</th>
+                    <th>Saldo</th>
+                  </tr>
+                </thead>
+                <tbody id="standings-a"></tbody>
+              </table>
+            </div>
+          </article>
+          <article class="feature-panel">
+            <div class="panel-title">
+              <h3>Categoria B</h3>
+              <span>turno e returno</span>
+            </div>
+            <div class="table-wrap">
+              <table class="full-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Equipe</th>
+                    <th>J</th>
+                    <th>V</th>
+                    <th>D</th>
+                    <th>PF</th>
+                    <th>PC</th>
+                    <th>Saldo</th>
+                  </tr>
+                </thead>
+                <tbody id="standings-b"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+        <div class="playoff-band">
+          <div>
+            <h3>Playoffs Categoria A</h3>
+            <p>1o x 8o, 2o x 7o, 3o x 6o e 4o x 5o. Semifinais e final em melhor de 3.</p>
+          </div>
+          <div>
+            <h3>Playoffs Categoria B</h3>
+            <p>1o x 4o e 2o x 3o. Final em melhor de 3 e disputa de 3o lugar por saldo.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="stats" data-panel="stats">
+        <div class="section-head">
+          <span>Estatisticas</span>
+          <h2>Liderancas e desempenho</h2>
+        </div>
+        <div class="toolbar">
+          <button class="filter is-active" type="button" data-stats-category="A">Categoria A</button>
+          <button class="filter" type="button" data-stats-category="B">Categoria B</button>
+        </div>
+        <div class="stats-layout">
+          <article class="feature-panel wide stat-command">
+            <div>
+              <span id="stats-category-label">Categoria A</span>
+              <h3 id="stats-command-title">Leaders da Categoria A</h3>
+            </div>
+            <div class="stat-strip">
+              <div>
+                <strong id="stat-games">0</strong>
+                <small>jogos</small>
+              </div>
+              <div>
+                <strong id="stat-players">0</strong>
+                <small>atletas</small>
+              </div>
+              <div>
+                <strong id="stat-ppg">0.0</strong>
+                <small>pontos/jogo</small>
+              </div>
+            </div>
+          </article>
+          <article class="feature-panel">
+            <div class="panel-title">
+              <h3>Lideres por pontos</h3>
+              <span>media por jogo</span>
+            </div>
+            <div class="leader-table" id="points-leaders"></div>
+          </article>
+          <article class="feature-panel">
+            <div class="panel-title">
+              <h3>Lideres por rebotes</h3>
+              <span>media por jogo</span>
+            </div>
+            <div class="leader-table" id="rebounds-leaders"></div>
+          </article>
+          <article class="feature-panel">
+            <div class="panel-title">
+              <h3>Lideres por assistencias</h3>
+              <span>media por jogo</span>
+            </div>
+            <div class="leader-table" id="assists-leaders"></div>
+          </article>
+          <article class="feature-panel">
+            <div class="panel-title">
+              <h3>Lideres por roubos</h3>
+              <span>media por jogo</span>
+            </div>
+            <div class="leader-table" id="steals-leaders"></div>
+          </article>
+          <article class="feature-panel">
+            <div class="panel-title">
+              <h3>Lideres por tocos</h3>
+              <span>media por jogo</span>
+            </div>
+            <div class="leader-table" id="blocks-leaders"></div>
+          </article>
+          <article class="feature-panel chart-panel wide">
+            <div class="panel-title">
+              <h3>Saldo medio por equipe</h3>
+              <span>diferenca por jogo</span>
+            </div>
+            <canvas id="team-diff-chart" width="960" height="360"></canvas>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel" id="rules" data-panel="rules">
+        <div class="section-head">
+          <span>Regulamento</span>
+          <h2>Regras da competicao</h2>
+        </div>
+        <div class="rules-layout">
+          <article class="feature-panel">
+            <div class="panel-title">
+              <h3>Sistema de disputa</h3>
+              <span>resumo operacional</span>
+            </div>
+            <div class="rules-list" id="rules-list"></div>
+          </article>
+          <article class="feature-panel">
+            <div class="panel-title">
+              <h3>Criterios de desempate</h3>
+              <span>ordem oficial</span>
+            </div>
+            <ol class="tie-list" id="tie-list"></ol>
+          </article>
+          <article class="feature-panel image-panel">
+            <img src="./assets/regulamento-1.jpeg" alt="Regulamento Campeonato Interno de Basquete Racha 2026" />
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Racha Basquete 2026</span>
+      <span>Site estatico para GitHub Pages. Sem coleta de dados.</span>
+    </footer>
+
+    <script src="./data/championship-data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
