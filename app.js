@@ -613,7 +613,7 @@
       .map((player) => `
         <button class="box-row full-stat" type="button" data-player-key="${safe(player.playerKey)}" data-player-category="${safe(player.category)}">
           <span><strong>${safe(player.name)}</strong><small>#${safe(player.number)} · ${safe(player.min)} min</small></span>
-          <b>${player.pts}</b><b>${player.oreb}</b><b>${player.dreb}</b><b>${player.reb}</b><b>${player.ast}</b><b>${player.stl}</b><b>${player.blk}</b><b>${player.turnovers}</b><b>${player.eff}</b>
+          <b data-label="PTS">${player.pts}</b><b data-label="RO">${player.oreb}</b><b data-label="RD">${player.dreb}</b><b data-label="RT">${player.reb}</b><b data-label="AS">${player.ast}</b><b data-label="BR">${player.stl}</b><b data-label="TO">${player.blk}</b><b data-label="ER">${player.turnovers}</b><b data-label="EF">${player.eff}</b>
         </button>
       `)
       .join("");
@@ -689,7 +689,7 @@
             return `
               <button class="box-row" type="button" data-game-id="${safe(game.gameId)}">
                 <span><strong>${formatDate(game.date)} vs ${safe(opponent)}</strong><small>${safe(game.abbr)} · ${safe(game.min)} min</small></span>
-                <b>${game.pts}</b><b>${game.reb}</b><b>${game.ast}</b><b>${game.stl}</b><b>${game.blk}</b><b>${game.eff}</b>
+                <b data-label="PTS">${game.pts}</b><b data-label="REB">${game.reb}</b><b data-label="AST">${game.ast}</b><b data-label="BR">${game.stl}</b><b data-label="TO">${game.blk}</b><b data-label="EFF">${game.eff}</b>
               </button>
             `;
           }).join("")}

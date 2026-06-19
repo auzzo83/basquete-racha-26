@@ -138,6 +138,17 @@ def player_display_name(team, number, raw_name):
     return title_name(raw_name)
 
 
+def player_identity_number(player):
+    # Fabio changed from #10 to #18 before Eduardo took Indiana's #10.
+    if (
+        player["team"] == "Indiana Hoosiers"
+        and player["number"] == "10"
+        and norm(player["name"]).startswith("FABIO")
+    ):
+        return "18"
+    return player["number"]
+
+
 def date_iso(day, month):
     month_key = strip_accents(month.lower()).replace(".", "")
     return f"2026-{MONTHS[month_key]:02d}-{int(day):02d}"
@@ -443,7 +454,8 @@ def latest_name_map(raw_players):
     for player in raw_players:
         if not player["official"] or player["category"] == "TI":
             continue
-        name_key = (player["category"], player["team"], player["number"])
+        identity_number = player_identity_number(player)
+        name_key = (player["category"], player["team"], identity_number)
         if name_key not in latest_names or player["date"] >= latest_names[name_key]["date"]:
             latest_names[name_key] = {"date": player["date"], "name": player["name"]}
     return latest_names
@@ -455,15 +467,16 @@ def compute_players(raw_players):
     for player in raw_players:
         if not player["official"] or player["category"] == "TI":
             continue
-        key = (player["category"], player["team"], player["number"])
+        identity_number = player_identity_number(player)
+        key = (player["category"], player["team"], identity_number)
         current = grouped.setdefault(
             key,
             {
                 "category": player["category"],
                 "team": player["team"],
                 "abbr": TEAM_ABBR[player["team"]],
-                "number": player["number"],
-                "playerKey": f'{player["team"]}::{player["number"]}',
+                "number": identity_number,
+                "playerKey": f'{player["team"]}::{identity_number}',
                 "name": player["name"],
                 "lastDate": player["date"],
                 "games": 0,
@@ -501,9 +514,10 @@ def normalize_player_games(raw_players):
         if not player["official"] or player["category"] == "TI":
             continue
         player = dict(player)
-        player["playerKey"] = f'{player["team"]}::{player["number"]}'
+        identity_number = player_identity_number(player)
+        player["playerKey"] = f'{player["team"]}::{identity_number}'
         player["name"] = latest_names.get(
-            (player["category"], player["team"], player["number"]), {"name": player["name"]}
+            (player["category"], player["team"], identity_number), {"name": player["name"]}
         )["name"]
         rows.append(player)
     return rows
@@ -647,6 +661,7 @@ def main():
             "Jogos de 25/abril identificados como Torneio Inicio ficam separados da classificacao oficial.",
             "Categoria oficial dos box scores: dias uteis entram como A; sabado/domingo entram como B.",
             "Atletas sao consolidados por categoria + time + numero, mantendo o nome mais recente do box score.",
+            "No Indiana, a mudanca confirmada de Fabio Botura da camisa 10 para a 18 e preservada sem misturar o posterior camisa 10 Eduardo.",
         ],
         "teams": [
             {"name": team, "abbr": TEAM_ABBR[team], "primary": TEAM_COLORS[team][0], "secondary": TEAM_COLORS[team][1]}
