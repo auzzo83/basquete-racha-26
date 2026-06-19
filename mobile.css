@@ -350,6 +350,7 @@ h1 {
   max-height: calc(100vh - 12px);
   margin: 6px auto;
   border-radius: 6px;
+  overflow-x: hidden;
 }
 
 .modal-close {

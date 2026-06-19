@@ -2073,7 +2073,8 @@ tbody tr:hover td {
   width: min(1120px, calc(100vw - 28px));
   max-height: calc(100vh - 36px);
   margin: 18px auto;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: #f7faff;
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 8px;
@@ -2108,9 +2109,10 @@ tbody tr:hover td {
 }
 
 .detail-hero h2 {
-  max-width: 880px;
+  max-width: calc(100% - 48px);
   margin: 14px 0 10px;
-  font-size: clamp(32px, 5vw, 64px);
+  overflow-wrap: anywhere;
+  font-size: clamp(32px, 4vw, 54px);
   line-height: 0.95;
 }
 
@@ -2123,7 +2125,7 @@ tbody tr:hover td {
 .detail-score-grid,
 .detail-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   padding: 18px;
 }
@@ -2141,13 +2143,33 @@ tbody tr:hover td {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
+  min-width: 0;
+  overflow: hidden;
   padding: 18px;
 }
 
-.detail-score-grid strong {
+.detail-score-grid article > strong {
+  flex: 0 0 auto;
   color: var(--navy);
   font-size: 54px;
   line-height: 1;
+}
+
+.detail-score-grid .team-cell {
+  min-width: 0;
+}
+
+.detail-score-grid .team-name {
+  min-width: 0;
+}
+
+.detail-score-grid .team-name strong {
+  overflow: hidden;
+  color: var(--navy);
+  font-size: 16px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .quarter-strip {
@@ -2265,7 +2287,7 @@ tbody tr:hover td {
 .full-boxscore {
   margin: 0 18px 18px;
   padding: 18px;
-  overflow-x: auto;
+  overflow-x: hidden;
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -2278,8 +2300,8 @@ tbody tr:hover td {
 
 .box-row.full-stat,
 .box-head.full-stat {
-  grid-template-columns: minmax(230px, 1fr) repeat(9, 42px);
-  min-width: 720px;
+  grid-template-columns: minmax(170px, 1fr) repeat(9, minmax(28px, 42px));
+  min-width: 0;
 }
 
 .box-head.full-stat {
