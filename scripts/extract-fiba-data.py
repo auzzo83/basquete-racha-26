@@ -349,13 +349,22 @@ def unique_box_files():
     return unique
 
 
-def match_schedule(schedule, home, away, date, official):
+def category_from_box_date(date, official):
+    if not official:
+        return "TI"
+    year, month, day = [int(part) for part in date.split("-")]
+    return "B" if datetime.date(year, month, day).weekday() >= 5 else "A"
+
+
+def match_schedule(schedule, home, away, date, official, category):
     if not official:
         return None
     candidates = [
         game
         for game in schedule
-        if {game["home"], game["away"]} == {home, away} and "homeScore" not in game
+        if game["category"] == category
+        and {game["home"], game["away"]} == {home, away}
+        and "homeScore" not in game
     ]
     exact = [game for game in candidates if game["date"] == date]
     return (exact or candidates[:1] or [None])[0]
@@ -408,8 +417,7 @@ def compute_standings(schedule):
     return standings
 
 
-def compute_players(raw_players):
-    grouped = {}
+def latest_name_map(raw_players):
     latest_names = {}
     for player in raw_players:
         if not player["official"] or player["category"] == "TI":
@@ -417,6 +425,15 @@ def compute_players(raw_players):
         name_key = (player["team"], player["number"])
         if name_key not in latest_names or player["date"] >= latest_names[name_key]["date"]:
             latest_names[name_key] = {"date": player["date"], "name": player["name"]}
+    return latest_names
+
+
+def compute_players(raw_players):
+    grouped = {}
+    latest_names = latest_name_map(raw_players)
+    for player in raw_players:
+        if not player["official"] or player["category"] == "TI":
+            continue
         key = (player["category"], player["team"], player["number"])
         current = grouped.setdefault(
             key,
@@ -425,6 +442,7 @@ def compute_players(raw_players):
                 "team": player["team"],
                 "abbr": TEAM_ABBR[player["team"]],
                 "number": player["number"],
+                "playerKey": f'{player["team"]}::{player["number"]}',
                 "name": player["name"],
                 "lastDate": player["date"],
                 "games": 0,
@@ -455,6 +473,19 @@ def compute_players(raw_players):
     return players
 
 
+def normalize_player_games(raw_players):
+    latest_names = latest_name_map(raw_players)
+    rows = []
+    for player in raw_players:
+        if not player["official"] or player["category"] == "TI":
+            continue
+        player = dict(player)
+        player["playerKey"] = f'{player["team"]}::{player["number"]}'
+        player["name"] = latest_names.get((player["team"], player["number"]), {"name": player["name"]})["name"]
+        rows.append(player)
+    return rows
+
+
 def write_placares_csv(schedule):
     output = os.path.join(PROJECT_DIR, "data", "placares.csv")
     headers = [
@@ -479,7 +510,7 @@ def write_placares_csv(schedule):
                     "Categoria": game.get("category", ""),
                     "Rodada": game.get("round", ""),
                     "Data Cronograma": game.get("date", ""),
-                    "Data Real": "",
+                    "Data Real": game.get("actualDate", ""),
                     "Horario": game.get("time", ""),
                     "Mandante": game.get("home", ""),
                     "Placar Mandante": game.get("homeScore", ""),
@@ -542,11 +573,12 @@ def main():
         home, home_score, away_score, away = score
         date = parse_date(text, file_path)
         official = "TORNEIO INICIO" not in norm(text)
-        game = match_schedule(schedule, home, away, date, official)
-        category = game["category"] if game else ("TI" if not official else "A")
+        category = category_from_box_date(date, official)
+        game = match_schedule(schedule, home, away, date, official, category)
         if game:
             game["status"] = "Final"
-            
+            if game["date"] != date:
+                game["actualDate"] = date
             if game["home"] == home:
                 game["homeScore"] = home_score
                 game["awayScore"] = away_score
@@ -590,6 +622,7 @@ def main():
             "Agenda extraida do PDF de classificacao alteracoes 14/04.",
             "Resultados e estatisticas extraidos dos box scores FIBA enviados.",
             "Jogos de 25/abril identificados como Torneio Inicio ficam separados da classificacao oficial.",
+            "Categoria oficial dos box scores: dias uteis entram como A; sabado/domingo entram como B.",
             "Atletas sao consolidados por categoria + time + numero, mantendo o nome mais recente do box score.",
         ],
         "teams": [
@@ -600,6 +633,7 @@ def main():
         "matches": matches,
         "standings": compute_standings(schedule),
         "players": compute_players(raw_players),
+        "playerGames": normalize_player_games(raw_players),
         "teamStats": compute_team_stats(schedule),
         "rules": {
             "categories": ["Categoria A: 8 equipes", "Categoria B: 4 equipes"],

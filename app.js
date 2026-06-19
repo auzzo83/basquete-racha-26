@@ -13,6 +13,15 @@
     return document.querySelector(selector);
   }
 
+  function safe(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
   function formatDate(value) {
     const [year, month, day] = value.split("-").map(Number);
     return new Date(year, month - 1, day).toLocaleDateString("pt-BR", {
@@ -151,6 +160,17 @@
 
   function refreshDerivedData() {
     recomputeStandings();
+    data.schedule.forEach((game) => {
+      const candidates = data.matches.filter(
+        (item) =>
+          item.official &&
+          item.category === game.category &&
+          [item.home, item.away].includes(game.home) &&
+          [item.home, item.away].includes(game.away)
+      );
+      const match = candidates.find((item) => item.date === (game.actualDate || game.date)) || candidates[0];
+      if (match) game.id = match.id;
+    });
     completedSchedule = data.schedule.filter((game) => Number.isFinite(game.homeScore));
     upcomingSchedule = data.schedule.filter((game) => !Number.isFinite(game.homeScore)).sort(byDate);
     officialMatches = completedSchedule.map((game) => ({
@@ -270,6 +290,38 @@
       .slice(0, count);
   }
 
+  function mvpScore(player) {
+    return Number(
+      (
+        player.ptsAvg * 1.0 +
+        player.rebAvg * 1.15 +
+        player.astAvg * 1.35 +
+        player.stlAvg * 2.2 +
+        player.blkAvg * 2.0 +
+        player.effAvg * 0.55
+      ).toFixed(1)
+    );
+  }
+
+  function renderMvpRace() {
+    const top = data.players
+      .filter((player) => player.games >= 2)
+      .map((player) => ({ ...player, mvp: mvpScore(player) }))
+      .sort((a, b) => b.mvp - a.mvp || b.games - a.games)
+      .slice(0, 3);
+    el("#mvp-race").innerHTML = top
+      .map((player, index) => `
+        <button class="mvp-card rank-${index + 1}" type="button" data-player-key="${safe(player.playerKey)}" data-player-category="${safe(player.category)}">
+          <span class="mvp-rank">#${index + 1}</span>
+          <span class="mvp-name">${safe(player.name)}</span>
+          <span class="mvp-team">${safe(player.abbr)} · Cat. ${safe(player.category)} · ${player.games} jogo${player.games === 1 ? "" : "s"}</span>
+          <span class="mvp-score">${player.mvp.toFixed(1)}</span>
+          <span class="mvp-line">${player.ptsAvg.toFixed(1)} PTS · ${player.rebAvg.toFixed(1)} REB · ${player.astAvg.toFixed(1)} AST · ${player.effAvg.toFixed(1)} EFF</span>
+        </button>
+      `)
+      .join("");
+  }
+
   function renderOverviewLeaders() {
     const leaders = [
       ["Pontos", "ptsAvg"],
@@ -297,16 +349,16 @@
   function renderLeaderTable(target, metric) {
     el(target).innerHTML = topBy(metric, 8)
       .map((player, index) => `
-        <div class="leader-row">
+        <button class="leader-row" type="button" data-player-key="${safe(player.playerKey)}" data-player-category="${safe(player.category)}">
           <div class="game-teams">
             ${teamLogo(player.team)}
             <span>
-              <strong>${index + 1}. ${player.name}</strong>
-              <small>${player.team} - ${player.games} jogo${player.games === 1 ? "" : "s"}</small>
+              <strong>${index + 1}. ${safe(player.name)}</strong>
+              <small>${safe(player.team)} - ${player.games} jogo${player.games === 1 ? "" : "s"}</small>
             </span>
           </div>
           <span class="leader-value">${player[metric].toFixed(1)}</span>
-        </div>
+        </button>
       `)
       .join("");
   }
@@ -330,6 +382,7 @@
     renderLeaderTable("#assists-leaders", "astAvg");
     renderLeaderTable("#steals-leaders", "stlAvg");
     renderLeaderTable("#blocks-leaders", "blkAvg");
+    bindDetailClicks();
     requestAnimationFrame(drawCharts);
   }
 
@@ -337,7 +390,7 @@
     const final = Number.isFinite(game.homeScore);
     const label = game.category === "TI" ? "Torneio Inicio" : `Categoria ${game.category}`;
     return `
-      <article class="game-card" data-category="${game.category}" data-upcoming="${final ? "false" : "true"}">
+      <button class="game-card" type="button" data-game-id="${safe(game.id || game.scheduleId || "")}" data-category="${game.category}" data-upcoming="${final ? "false" : "true"}">
         <header>
           <span class="badge">${label}</span>
           <span class="meta">${formatDate(game.date)}${game.time ? ` - ${game.time}` : ""}</span>
@@ -355,7 +408,7 @@
           </span>
         </div>
         <p class="meta">${final ? "Final" : "Agendado"}${game.actualDate ? ` - remarcado para ${formatDate(game.actualDate)}` : ""}</p>
-      </article>
+      </button>
     `;
   }
 
@@ -371,6 +424,7 @@
     if (filter === "upcoming") games = games.filter((game) => !Number.isFinite(game.homeScore));
     if (["A", "B", "TI"].includes(filter)) games = games.filter((game) => game.category === filter);
     el("#games-grid").innerHTML = games.map(gameCard).join("");
+    bindDetailClicks();
   }
 
   function renderRules() {
@@ -462,6 +516,133 @@
     document.querySelectorAll("[data-stats-category]").forEach((button) => {
       button.addEventListener("click", () => renderStatsCategory(button.dataset.statsCategory));
     });
+
+    document.querySelectorAll("[data-close-modal]").forEach((button) => {
+      button.addEventListener("click", closeModal);
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeModal();
+    });
+  }
+
+  function bindDetailClicks() {
+    document.querySelectorAll("[data-game-id]").forEach((button) => {
+      if (button.dataset.bound === "true") return;
+      button.dataset.bound = "true";
+      button.addEventListener("click", () => openGameDetail(button.dataset.gameId));
+    });
+    document.querySelectorAll("[data-player-key]").forEach((button) => {
+      if (button.dataset.bound === "true") return;
+      button.dataset.bound = "true";
+      button.addEventListener("click", () => openPlayerDetail(button.dataset.playerKey, button.dataset.playerCategory));
+    });
+  }
+
+  function openModal(html) {
+    el("#modal-content").innerHTML = html;
+    const modal = el("#detail-modal");
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    bindDetailClicks();
+  }
+
+  function closeModal() {
+    const modal = el("#detail-modal");
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+  }
+
+  function statPill(label, value) {
+    return `<div class="detail-stat"><strong>${value}</strong><small>${label}</small></div>`;
+  }
+
+  function openGameDetail(gameId) {
+    const match = data.matches.find((item) => item.id === gameId);
+    if (!match) return;
+    const players = data.playerGames
+      .filter((player) => player.gameId === gameId)
+      .sort((a, b) => b.pts - a.pts || b.reb - a.reb || b.ast - a.ast);
+    const homeTotal = match.teamTotals.find((team) => team.team === match.home) || {};
+    const awayTotal = match.teamTotals.find((team) => team.team === match.away) || {};
+    const quarterLine = match.quarters.length
+      ? match.quarters.map((q, index) => `<span>Q${index + 1}: ${q.home}-${q.away}</span>`).join("")
+      : "<span>Parciais indisponiveis</span>";
+    openModal(`
+      <header class="detail-hero">
+        <span class="badge">Categoria ${safe(match.category)}</span>
+        <h2 id="modal-title">${safe(match.home)} ${match.homeScore} - ${match.awayScore} ${safe(match.away)}</h2>
+        <p>${formatDate(match.date)} · ${safe(match.phase)} · ${safe(match.file)}</p>
+      </header>
+      <div class="detail-score-grid">
+        <article>${teamCell(match.home)}<strong>${match.homeScore}</strong></article>
+        <article>${teamCell(match.away)}<strong>${match.awayScore}</strong></article>
+      </div>
+      <div class="quarter-strip">${quarterLine}</div>
+      <div class="detail-grid">
+        <section>
+          <h3>Totais do jogo</h3>
+          <div class="detail-stats">
+            ${statPill(`${homeTotal.abbr || "CASA"} REB`, homeTotal.reb ?? "-")}
+            ${statPill(`${awayTotal.abbr || "FORA"} REB`, awayTotal.reb ?? "-")}
+            ${statPill(`${homeTotal.abbr || "CASA"} AST`, homeTotal.ast ?? "-")}
+            ${statPill(`${awayTotal.abbr || "FORA"} AST`, awayTotal.ast ?? "-")}
+            ${statPill(`${homeTotal.abbr || "CASA"} EFF`, homeTotal.eff ?? "-")}
+            ${statPill(`${awayTotal.abbr || "FORA"} EFF`, awayTotal.eff ?? "-")}
+          </div>
+        </section>
+        <section>
+          <h3>Destaques individuais</h3>
+          <div class="box-table">
+            ${players.slice(0, 10).map((player) => `
+              <button class="box-row" type="button" data-player-key="${safe(player.playerKey)}" data-player-category="${safe(player.category)}">
+                <span><strong>${safe(player.name)}</strong><small>${safe(player.abbr)} #${safe(player.number)}</small></span>
+                <b>${player.pts}</b><b>${player.reb}</b><b>${player.ast}</b><b>${player.stl}</b><b>${player.blk}</b><b>${player.eff}</b>
+              </button>
+            `).join("")}
+          </div>
+          <div class="box-head"><span></span><b>PTS</b><b>REB</b><b>AST</b><b>BR</b><b>TO</b><b>EFF</b></div>
+        </section>
+      </div>
+    `);
+  }
+
+  function openPlayerDetail(playerKey, category) {
+    const player = data.players.find((item) => item.playerKey === playerKey && item.category === category);
+    if (!player) return;
+    const games = data.playerGames
+      .filter((item) => item.playerKey === playerKey && item.category === category)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    openModal(`
+      <header class="detail-hero player-detail">
+        <span class="badge">Categoria ${safe(category)}</span>
+        <h2 id="modal-title">${safe(player.name)}</h2>
+        <p>${safe(player.team)} · camisa ${safe(player.number)} · ${player.games} jogo${player.games === 1 ? "" : "s"}</p>
+      </header>
+      <div class="detail-stats player-summary">
+        ${statPill("PTS", player.ptsAvg.toFixed(1))}
+        ${statPill("REB", player.rebAvg.toFixed(1))}
+        ${statPill("AST", player.astAvg.toFixed(1))}
+        ${statPill("BR", player.stlAvg.toFixed(1))}
+        ${statPill("TO", player.blkAvg.toFixed(1))}
+        ${statPill("EFF", player.effAvg.toFixed(1))}
+      </div>
+      <section>
+        <h3>Jogo a jogo</h3>
+        <div class="box-table player-games">
+          ${games.map((game) => {
+            const match = data.matches.find((item) => item.id === game.gameId);
+            const opponent = match ? (match.home === game.team ? match.away : match.home) : "";
+            return `
+              <button class="box-row" type="button" data-game-id="${safe(game.gameId)}">
+                <span><strong>${formatDate(game.date)} vs ${safe(opponent)}</strong><small>${safe(game.abbr)} · ${safe(game.min)} min</small></span>
+                <b>${game.pts}</b><b>${game.reb}</b><b>${game.ast}</b><b>${game.stl}</b><b>${game.blk}</b><b>${game.eff}</b>
+              </button>
+            `;
+          }).join("")}
+        </div>
+        <div class="box-head"><span></span><b>PTS</b><b>REB</b><b>AST</b><b>BR</b><b>TO</b><b>EFF</b></div>
+      </section>
+    `);
   }
 
   function drawCharts() {
@@ -488,6 +669,7 @@
     renderStandings("#standings-b", "B");
     renderLatestResults();
     renderOverviewLeaders();
+    renderMvpRace();
     renderStatsCategory("A");
     renderGames();
     renderRules();

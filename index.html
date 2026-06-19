@@ -208,6 +208,13 @@
           <button class="filter" type="button" data-stats-category="B">Categoria B</button>
         </div>
         <div class="stats-layout">
+          <article class="feature-panel wide mvp-panel">
+            <div class="panel-title">
+              <h3>Corrida MVP</h3>
+              <span>top 3 geral por impacto - min. 2 jogos</span>
+            </div>
+            <div class="mvp-grid" id="mvp-race"></div>
+          </article>
           <article class="feature-panel wide stat-command">
             <div>
               <span id="stats-category-label">Categoria A</span>
@@ -304,6 +311,14 @@
       <span>Racha Basquete 2026</span>
       <span>Site estatico para GitHub Pages. Sem coleta de dados.</span>
     </footer>
+
+    <div class="modal" id="detail-modal" aria-hidden="true">
+      <div class="modal-backdrop" data-close-modal></div>
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <button class="modal-close" type="button" data-close-modal aria-label="Fechar">×</button>
+        <div id="modal-content"></div>
+      </section>
+    </div>
 
     <script src="./data/championship-data.js"></script>
     <script src="./app.js"></script>
