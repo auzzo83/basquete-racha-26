@@ -286,11 +286,11 @@
       .slice(0, 5);
     el("#latest-results").innerHTML = latest
       .map((game) => `
-        <article class="result-card">
+        <button class="result-card" type="button" data-game-id="${safe(game.id || game.scheduleId || "")}">
           <div>${teamCell(game.home)}</div>
           <div class="score">${game.homeScore} - ${game.awayScore}</div>
           <div>${teamCell(game.away)}</div>
-        </article>
+        </button>
       `)
       .join("");
   }
@@ -344,8 +344,11 @@
     ];
     el("#overview-leaders").innerHTML = ["A", "B"]
       .map((category) => `
-        <article class="leader-card overview-category-leaders">
-          <span>Categoria ${category}</span>
+        <section class="overview-category-leaders">
+          <header>
+            <span>Categoria ${category}</span>
+            <small>Lideres por media</small>
+          </header>
           ${metrics.map(([label, metric]) => {
             const player = data.players
               .filter((item) => item.games >= 2 && item.category === category)
@@ -353,13 +356,19 @@
               .sort((a, b) => b[metric] - a[metric] || b.games - a.games)[0];
             return `
               <button type="button" class="mini-leader" data-player-key="${safe(player?.playerKey || "")}" data-player-category="${category}">
-                <b>${label}</b>
-                <strong>${player ? player[metric].toFixed(1) : "0.0"}</strong>
-                <small>${player ? `${safe(player.name)} - ${safe(player.abbr)}` : "Sem dados"}</small>
+                <b class="leader-stat-label">${label}</b>
+                <span class="leader-player">
+                  <strong>${player ? safe(player.name) : "Sem dados"}</strong>
+                  <small>${player ? `${safe(player.abbr)} · ${player.games} jogos` : ""}</small>
+                </span>
+                <span class="leader-average">
+                  <strong>${player ? player[metric].toFixed(1) : "0.0"}</strong>
+                  <small>media</small>
+                </span>
               </button>
             `;
           }).join("")}
-        </article>
+        </section>
       `)
       .join("");
     bindDetailClicks();

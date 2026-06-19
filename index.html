@@ -70,83 +70,90 @@
           <span>Resumo</span>
           <h2>Panorama da fase de classificacao</h2>
         </div>
-        <div class="overview-grid">
-          <article class="feature-panel">
-            <div class="panel-title">
-              <h3>Classificacao Categoria A</h3>
-              <span>Top 8 avancam</span>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                   <tr>
-                     <th>#</th>
-                     <th>Equipe</th>
-                     <th>J</th>
-                     <th>V</th>
-                     <th>D</th>
-                     <th>PF</th>
-                     <th>PA</th>
-                     <th>Saldo</th>
-                   </tr>
-                 </thead>
-                <tbody id="overview-standings-a"></tbody>
-              </table>
-            </div>
-          </article>
-          <article class="feature-panel">
-            <div class="panel-title">
-              <h3>Classificacao Categoria B</h3>
-              <span>Top 4 avancam</span>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                   <tr>
-                     <th>#</th>
-                     <th>Equipe</th>
-                     <th>J</th>
-                     <th>V</th>
-                     <th>D</th>
-                     <th>PF</th>
-                     <th>PA</th>
-                     <th>Saldo</th>
-                   </tr>
-                 </thead>
-                <tbody id="overview-standings-b"></tbody>
-              </table>
-            </div>
-          </article>
-          <article class="feature-panel">
-            <div class="panel-title">
-              <h3>Ultimos resultados</h3>
-              <span>Box scores oficiais</span>
-            </div>
-            <div class="result-list" id="latest-results"></div>
-          </article>
-          <article class="feature-panel chart-panel">
-            <div class="panel-title">
-              <h3>Ataque e defesa</h3>
-              <span>pontos por jogo</span>
-            </div>
-            <div class="dual-chart">
+        <div class="overview-dashboard">
+          <section class="overview-block standings-block" aria-labelledby="overview-standings-title">
+            <div class="overview-block-head">
               <div>
-                <h4>Ataque</h4>
-                <canvas id="team-ppg-chart" width="760" height="300"></canvas>
+                <span class="overview-index">01</span>
+                <h3 id="overview-standings-title">Classificacao</h3>
               </div>
+              <p>Fase regular</p>
+            </div>
+            <div class="overview-standings-grid">
+              <article class="feature-panel standings-card">
+                <div class="panel-title">
+                  <h3>Categoria A</h3>
+                  <span>Top 8 avancam</span>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>#</th><th>Equipe</th><th>J</th><th>V</th><th>D</th><th>PF</th><th>PA</th><th>Saldo</th></tr>
+                    </thead>
+                    <tbody id="overview-standings-a"></tbody>
+                  </table>
+                </div>
+              </article>
+              <article class="feature-panel standings-card">
+                <div class="panel-title">
+                  <h3>Categoria B</h3>
+                  <span>Top 4 avancam</span>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>#</th><th>Equipe</th><th>J</th><th>V</th><th>D</th><th>PF</th><th>PA</th><th>Saldo</th></tr>
+                    </thead>
+                    <tbody id="overview-standings-b"></tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="overview-block" aria-labelledby="overview-performance-title">
+            <div class="overview-block-head">
               <div>
-                <h4>Melhores defesas</h4>
-                <canvas id="team-defense-overview-chart" width="760" height="300"></canvas>
+                <span class="overview-index">02</span>
+                <h3 id="overview-performance-title">Desempenho coletivo</h3>
               </div>
+              <p>Categoria A · pontos por jogo</p>
             </div>
-          </article>
-          <article class="feature-panel">
-            <div class="panel-title">
-              <h3>Lideres individuais</h3>
-              <span>medias por categoria</span>
+            <div class="overview-performance-grid">
+              <article class="feature-panel chart-panel performance-panel">
+                <div class="dual-chart">
+                  <div class="chart-module">
+                    <div class="chart-heading"><span>Ataque</span><small>Maior media</small></div>
+                    <canvas id="team-ppg-chart" width="760" height="300"></canvas>
+                  </div>
+                  <div class="chart-module">
+                    <div class="chart-heading"><span>Defesa</span><small>Menor media sofrida</small></div>
+                    <canvas id="team-defense-overview-chart" width="760" height="300"></canvas>
+                  </div>
+                </div>
+              </article>
+              <article class="feature-panel results-panel">
+                <div class="panel-title">
+                  <h3>Ultimos resultados</h3>
+                  <span>Box scores</span>
+                </div>
+                <div class="result-list" id="latest-results"></div>
+              </article>
             </div>
-            <div class="leader-grid" id="overview-leaders"></div>
-          </article>
+          </section>
+
+          <section class="overview-block" aria-labelledby="overview-leaders-title">
+            <div class="overview-block-head">
+              <div>
+                <span class="overview-index">03</span>
+                <h3 id="overview-leaders-title">Lideres individuais</h3>
+              </div>
+              <p>Medias · minimo de 2 jogos</p>
+            </div>
+            <article class="feature-panel leaders-panel">
+              <div class="leader-grid" id="overview-leaders"></div>
+            </article>
+          </section>
         </div>
       </section>
 
