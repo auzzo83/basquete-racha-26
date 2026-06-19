@@ -244,6 +244,17 @@
     `;
   }
 
+  function compactTeam(name) {
+    const team = teams.get(name);
+    const abbr = team ? team.abbr : name.slice(0, 3).toUpperCase();
+    return `
+      <span class="result-team-compact" title="${safe(name)}" aria-label="${safe(name)}">
+        ${teamLogo(name)}
+        <strong>${safe(abbr)}</strong>
+      </span>
+    `;
+  }
+
   function setMetrics() {
     const points = officialMatches.reduce((sum, game) => sum + game.homeScore + game.awayScore, 0);
     const todayIso = localTodayIso();
@@ -287,9 +298,9 @@
     el("#latest-results").innerHTML = latest
       .map((game) => `
         <button class="result-card" type="button" data-game-id="${safe(game.id || game.scheduleId || "")}">
-          <div>${teamCell(game.home)}</div>
+          <div>${compactTeam(game.home)}</div>
           <div class="score">${game.homeScore} - ${game.awayScore}</div>
-          <div>${teamCell(game.away)}</div>
+          <div>${compactTeam(game.away)}</div>
         </button>
       `)
       .join("");

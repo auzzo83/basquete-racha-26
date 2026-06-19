@@ -963,6 +963,26 @@ tbody tr:last-child td {
   border-bottom: 0;
 }
 
+.result-team-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--navy);
+}
+
+.result-team-compact strong {
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.results-panel .result-card > div:last-child {
+  text-align: right;
+}
+
+.results-panel .result-card > div:last-child .result-team-compact {
+  flex-direction: row-reverse;
+}
+
 .results-panel .result-card:hover {
   background: #f1f6ff;
 }
